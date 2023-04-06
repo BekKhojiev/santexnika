@@ -1,0 +1,173 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+header{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 50px;
+}
+.logo{
+    display: flex;
+    align-items: center;
+    
+}
+.logo img{
+    border-right: 1px solid black;
+    margin-right: 5px;
+}
+.bir{
+    display: flex;
+    align-items: center;
+    gap: 50px;
+}
+header button{
+    background-color: transparent;
+    color: #00CD95;
+    padding: 10px;
+    border-radius: 50px;
+    border: 1px solid #00CD95;
+}
+header button:hover{
+    background-color: #00CD95;
+    color: #E8FBF6;
+    transition: 1s;
+}
+.intro{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #E8FBF6;
+    border-radius: 50px;
+}
+.text h1{
+    font-size: 50px ;
+    margin: 50px 0px;
+}
+#p{
+    width: 60%;
+    margin: 20px 0px;
+}
+.text img{
+    background-color: #00CD95;
+    color: #fff;
+    padding: 5px ;
+    border-radius: 100px;
+}
+#bb{
+    display: flex;
+    align-items: center;
+}
+#bb button{
+    background-color: #00CD95;
+    color: #fff;
+    border: 1px solid #00CD95;
+    border-radius: 30px;
+    padding: 15px;
+    margin-right: 10px;
+    width: 160px;
+}
+#bb img{
+    background-color: #00CD95;
+    color: #fff;
+    padding: 15px;
+    border-radius: 100px;
+}
+#pp{
+    margin: 30px 0px;
+}
+#pl{
+    margin-bottom: 30px;
+}
+#bb p{
+    width: 17%;
+    margin-left: 15px;
+}
+b{
+    color:  #00CD95;
+}
+#q{
+    margin-top: 20px;
+}
+.ichidagi{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    align-items: center;
+    justify-content: center;
+}
+.kichik{
+    background-color: #E8FBF6;
+    height: 360px;
+    width: 328px;
+    left: 116px;
+    top: 1035px;
+    border-radius: 36px;
+    border: 1px solid #00CD95;
+    text-align: center;
+}
+.kichik img{
+    margin: 20px 0px;
+}
+.kichik h1{
+    margin-bottom: 20px;
+}
+#ss{
+    padding: 80px;
+    text-align: center;
+}
+.kichikk{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 334px;
+width: 328px;
+left: 463px;
+top: 3126px;
+border-radius: 36px;
+background-color: #E8FBF6;
+border: 1px solid #00CD95;
+text-align: center;
+}
+.kichikk img{
+    margin-bottom: 30px;
+}
+.kichikk h1{
+    margin: 20px 0px;
+}
+#f{
+    width: 60%;
+}
+#bb button:hover{
+    background-color: transparent;
+    color: #00CD95;
+    transition: 1s;
+}
+.olti{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #E8FBF6;
+    border-radius: 80px;
+}
+@media screen and (max-width:990px){
+    header button{
+        display: none;
+    }
+    .intro{
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+    }
+    .ikki{
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .olti{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
