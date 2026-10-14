@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<title>NITRON — Elektromobil va salomatlik</title>
+<style>
+@font-face{font-family:Unb;font-weight:800;src:url(fonts/unbounded-latin-800-normal.woff2)}
+@font-face{font-family:Unb;font-weight:900;src:url(fonts/unbounded-latin-900-normal.woff2)}
+@font-face{font-family:Man;font-weight:500;src:url(fonts/manrope-latin-500-normal.woff2)}
+@font-face{font-family:Man;font-weight:700;src:url(fonts/manrope-latin-700-normal.woff2)}
+@font-face{font-family:Man;font-weight:800;src:url(fonts/manrope-latin-800-normal.woff2)}
+@font-face{font-family:Mono;font-weight:400;src:url(fonts/jetbrains-mono-latin-400-normal.woff2)}
+@font-face{font-family:Mono;font-weight:700;src:url(fonts/jetbrains-mono-latin-700-normal.woff2)}
+:root{--lime:#c8f031;--org:#ffb23e;--red:#ff4d4f;--blue:#5b8cff;--txt:#f4f6fb;--dim:rgba(255,255,255,.22)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:720px;height:1280px;overflow:hidden;background:#07080c}
+body{font-family:Man,sans-serif;color:var(--txt)}
+#stage{position:relative;width:720px;height:1280px;overflow:hidden;
+ background:radial-gradient(120% 70% at 50% 40%,#151925 0%,#0b0d13 55%,#06070a 100%)}
+#grid{position:absolute;inset:0;opacity:.55;
+ background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+ background-size:60px 60px;background-position:0 0}
+#crosses{position:absolute;inset:0}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.0}
+#vig{position:absolute;inset:0;z-index:1;background:radial-gradient(90% 60% at 50% 50%,transparent 55%,rgba(0,0,0,.65) 100%);pointer-events:none}
+/* header */
+#hdr{position:absolute;z-index:5;left:0;right:0;top:0;height:100px;padding:28px 26px 0}
+#logo{position:absolute;left:24px;top:26px;width:46px;height:46px}
+#brand{position:absolute;left:80px;top:28px;font:800 19px Man;letter-spacing:.2px}
+#brand small{display:block;font:500 11.5px Man;color:rgba(255,255,255,.45);margin-top:2px;letter-spacing:.3px}
+#sc{position:absolute;right:26px;top:29px;text-align:right;font:400 10.5px Mono;color:rgba(255,255,255,.35)}
+#chap{display:block;font:800 14px Man;color:var(--org);margin-top:3px;letter-spacing:.2px}
+#prog{position:absolute;left:26px;right:26px;top:86px;height:3px;display:flex;gap:5px}
+#prog i{flex:1;background:rgba(255,255,255,.1);border-radius:2px;position:relative;overflow:hidden}
+#prog i b{position:absolute;left:0;top:0;bottom:0;background:var(--org);width:0}
+/* caption */
+#cap{position:absolute;z-index:5;left:20px;right:20px;top:196px;height:60px;text-align:center;font:800 35px Man;letter-spacing:-.2px;white-space:nowrap}
+#cap span{display:inline-block;margin:0 6px;position:relative;transition:none}
+#cap .w{color:var(--dim)}
+#cap .on{color:var(--txt)}
+#cap .box{padding:0 8px;outline:2px solid rgba(91,140,255,.0)}
+#cap .box.on{outline-color:rgba(91,140,255,.95);background:rgba(91,140,255,.12)}
+#cap .box.on::before,#cap .box.on::after{content:"";position:absolute;width:7px;height:7px;background:#dfe8ff;border:1px solid var(--blue)}
+#cap .box.on::before{left:-4px;top:-4px}#cap .box.on::after{right:-4px;bottom:-4px}
+#cap .red.on{color:var(--red);text-shadow:0 0 18px rgba(255,77,79,.5)}
+/* scenes */
+.scene{position:absolute;left:0;top:260px;width:720px;height:960px;opacity:0}
+.mono{font-family:Mono}
+.card{position:absolute;background:linear-gradient(180deg,rgba(28,32,46,.92),rgba(16,18,27,.92));border:1px solid rgba(255,255,255,.08);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.big{font:900 54px Unb;line-height:1.05;text-transform:uppercase;text-align:center;letter-spacing:-.5px}
+.lbl{font:700 11px Mono;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.chip{display:inline-block;padding:8px 16px;border-radius:999px;font:800 15px Man}
+.cell{position:absolute;width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,.07)}
+</style>
+</head>
+<body>
+<div id="stage">
+ <div id="grid"></div>
+ <svg id="crosses" width="720" height="1280"></svg>
+ <div class="blob" id="b1" style="left:-120px;top:380px;width:360px;height:360px;background:#ff9a2e"></div>
+ <div class="blob" id="b2" style="right:-140px;top:640px;width:380px;height:380px;background:#4b6bff"></div>
+
+ <div id="hdr">
+  <svg id="logo" viewBox="0 0 46 46"></svg>
+  <div id="brand">NITRON<small>elektromobil va salomatlik</small></div>
+  <div id="sc"><span id="scn">sahna 01/12</span><span id="chap">savol</span></div>
+  <div id="prog"></div>
+ </div>
+ <div id="cap"></div>
+
+ <!-- S1 hook -->
+ <div class="scene" id="s1">
+  <div class="big" id="s1t" style="position:absolute;left:30px;right:30px;top:40px;font-size:50px">
+   <span style="color:var(--org)">Elektromobil</span><br>erkaklar<br>salomatligiga<br>zararmi?</div>
+  <div id="s1car" style="position:absolute;left:20px;top:420px;width:680px"></div>
+  <div id="s1chips" style="position:absolute;left:0;right:0;top:820px;text-align:center">
+   <span class="chip" id="c1a" style="background:rgba(200,240,49,.14);color:var(--lime);border:1px solid rgba(200,240,49,.4)">haqiqat</span>
+   <span style="font:800 18px Man;color:rgba(255,255,255,.4);margin:0 12px">yoki</span>
+   <span class="chip" id="c1b" style="background:rgba(255,77,79,.14);color:var(--red);border:1px solid rgba(255,77,79,.4)">afsona?</span>
+  </div>
+ </div>
+
+ <!-- S2 chat -->
+ <div class="scene" id="s2"><div id="phone2" style="position:absolute;left:180px;top:30px;width:360px;height:740px"></div></div>
+
+ <!-- S3 underfloor -->
+ <div class="scene" id="s3">
+  <div id="s3car" style="position:absolute;left:20px;top:110px;width:680px"></div>
+  <div class="chip" id="s3lab" style="position:absolute;left:50%;top:560px;transform:translateX(-50%);background:rgba(91,140,255,.14);border:1px solid rgba(91,140,255,.5);color:#bcd0ff;font-size:14px">pol ostidagi rentgen</div>
+  <div id="s3amp" style="position:absolute;left:0;right:0;top:620px;text-align:center"></div>
+  <div id="s3stamp" style="position:absolute;left:50%;top:700px;width:560px;margin-left:-280px;padding:14px 0;text-align:center;font:900 30px Unb;color:#3dff8f;border:3px solid #3dff8f;border-radius:12px;text-shadow:0 0 20px rgba(61,255,143,.6);box-shadow:0 0 30px rgba(61,255,143,.35),inset 0 0 30px rgba(61,255,143,.15);text-transform:uppercase">mish-mishda haqiqat bor</div>
+ </div>
+
+ <!-- S4 measure -->
+ <div class="scene" id="s4">
+  <div id="s4car" style="position:absolute;left:20px;top:20px;width:680px"></div>
+  <div id="s4unit" style="position:absolute;left:0;right:0;top:450px;text-align:center">
+   <div style="font:900 84px Unb;color:#9fc1ff;text-shadow:0 0 30px rgba(91,140,255,.8)">µT</div>
+   <div class="lbl" style="margin-top:8px">mikrotesla — magnit maydon birligi</div>
+  </div>
+  <div class="card" id="s4card" style="left:40px;top:420px;width:640px;height:330px">
+   <div class="lbl" style="position:absolute;left:26px;top:22px">100 katak = me'yor 100 µT</div>
+   <div id="s4cells" style="position:absolute;left:26px;top:52px;width:260px;height:260px"></div>
+   <div id="s4right" style="position:absolute;left:310px;top:40px;width:300px;text-align:center"></div>
+  </div>
+ </div>
+
+ <!-- S5 surprise -->
+ <div class="scene" id="s5">
+  <div class="big" id="s5t" style="position:absolute;left:0;right:0;top:40px;font-size:40px;color:var(--org)">syurpriz!</div>
+  <div class="card" style="left:40px;top:160px;width:640px;height:330px">
+   <div class="lbl" style="position:absolute;left:26px;top:22px">100 katak = me'yor 100 µT</div>
+   <div id="s5cells" style="position:absolute;left:26px;top:52px;width:260px;height:260px"></div>
+   <div id="s5right" style="position:absolute;left:300px;top:30px;width:320px;height:280px"></div>
+  </div>
+  <div id="s5cmp" style="position:absolute;left:40px;top:540px;width:640px"></div>
+ </div>
+
+ <!-- S6 Germany -->
+ <div class="scene" id="s6">
+  <div class="lbl" id="s6lbl" style="position:absolute;left:0;right:0;top:30px;text-align:center;font-size:13px;color:#cfd6e6">Germaniya · 14 ta mashina · datchiklar</div>
+  <div id="s6cars" style="position:absolute;left:40px;top:80px;width:640px;height:400px"></div>
+  <div id="s6ok" style="position:absolute;left:0;right:0;top:500px;text-align:center"></div>
+  <div class="card" id="s6seat" style="left:40px;top:200px;width:640px;height:480px"></div>
+ </div>
+
+ <!-- S7 twist -->
+ <div class="scene" id="s7">
+  <div class="big" id="s7q" style="position:absolute;left:0;right:0;top:60px;font-size:46px">tarqaldikmi?</div>
+  <div class="card" id="s7myth" style="left:110px;top:220px;width:500px;height:150px;transform:rotate(-2deg)">
+   <div style="position:absolute;left:0;right:0;top:34px;text-align:center;font:700 20px Man;color:#dfe4ef">«Elektromobil nurlanishi<br>erkaklarga zarar»</div>
+   <div id="s7stamp" style="position:absolute;right:-34px;bottom:-30px;padding:6px 20px;border:3px solid #3dff8f;border-radius:12px;font:900 34px Unb;color:#3dff8f;transform:rotate(-12deg);background:rgba(10,30,20,.8);text-shadow:0 0 14px rgba(61,255,143,.6)">✓ AFSONA</div>
+  </div>
+  <div id="s7enemy" style="position:absolute;left:0;right:0;top:470px;text-align:center"></div>
+ </div>
+
+ <!-- S8 thermal -->
+ <div class="scene" id="s8">
+  <div class="card" id="s8cam" style="left:40px;top:40px;width:640px;height:640px;overflow:hidden;background:radial-gradient(80% 70% at 45% 55%,#2c0f5a 0%,#170a35 60%,#0c0620 100%)"></div>
+  <div id="s8note" style="position:absolute;left:40px;right:40px;top:720px;text-align:center"></div>
+ </div>
+
+ <!-- S9 science -->
+ <div class="scene" id="s9">
+  <div class="card" id="s9card" style="left:70px;top:120px;width:580px;height:300px">
+   <div class="lbl" style="position:absolute;left:0;right:0;top:30px;text-align:center">to'g'ridan-to'g'ri tadqiqot yo'q</div>
+   <div style="position:absolute;left:0;right:0;top:80px;text-align:center;font:800 28px Man;line-height:1.3">O'rindiq isitgichi<br>→ bepushtlik?</div>
+   <div id="s9chip" class="chip" style="position:absolute;left:50%;top:200px;transform:translateX(-50%);background:rgba(91,140,255,.16);color:#bcd0ff;border:1px solid rgba(91,140,255,.5)">isbotlanmagan</div>
+  </div>
+  <div id="s9sauna" style="position:absolute;left:0;right:0;top:480px;text-align:center"></div>
+ </div>
+
+ <!-- S10 any car -->
+ <div class="scene" id="s10">
+  <div class="big" id="s10t" style="position:absolute;left:0;right:0;top:40px;font-size:40px">har <span style="color:#ff6a3d">qanday</span> mashinada</div>
+  <div id="s10tags" style="position:absolute;left:0;right:0;top:130px;text-align:center"></div>
+  <div id="s10car" style="position:absolute;left:20px;top:230px;width:680px"></div>
+  <div id="s10vent" style="position:absolute;left:0;right:0;top:640px;text-align:center"></div>
+ </div>
+
+ <!-- S11 rules -->
+ <div class="scene" id="s11">
+  <div class="big" style="position:absolute;left:0;right:0;top:40px;font-size:38px"><span style="color:var(--org)">3 qoida</span><br>uzoq yo'l uchun</div>
+  <div id="s11list" style="position:absolute;left:50px;top:200px;width:620px"></div>
+ </div>
+
+ <!-- S12 outro -->
+ <div class="scene" id="s12">
+  <div id="phone12" style="position:absolute;left:180px;top:30px;width:360px;height:740px"></div>
+  <div id="s12cta" style="position:absolute;left:0;right:0;top:40px;text-align:center;opacity:0">
+   <div class="big" style="font-size:44px">Sen isitgichni<br><span style="color:var(--red);text-shadow:0 0 24px rgba(255,77,79,.6)">maksimumga</span><br>yoqasanmi?</div>
+   <div class="card" style="position:relative;display:inline-block;margin-top:50px;width:560px;height:72px;border-radius:40px;left:0;top:0">
+    <svg viewBox="0 0 46 46" width="40" height="40" style="position:absolute;left:16px;top:16px" class="logoMini"></svg>
+    <div style="position:absolute;left:70px;top:24px;font:500 18px Man;color:rgba(255,255,255,.4)">Izoh qoldiring...</div>
+    <div style="position:absolute;right:18px;top:18px;width:36px;height:36px;border-radius:50%;background:var(--blue)"></div>
+   </div>
+  </div>
+  <div id="endcard" style="position:absolute;left:0;right:0;top:120px;text-align:center;opacity:0">
+   <svg viewBox="0 0 46 46" width="220" height="220" class="logoBig"></svg>
+   <div style="font:900 64px Unb;letter-spacing:6px;margin-top:30px">NITRON</div>
+   <div class="lbl" style="margin-top:14px;font-size:14px">elektromobil va salomatlik</div>
+   <div class="chip" style="margin-top:40px;background:var(--lime);color:#0b0d13;font-size:20px;padding:14px 30px">Obuna bo'ling</div>
+  </div>
+ </div>
+
+ <div id="vig"></div>
+</div>
+
+<script src="words.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const lin=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{const c=1.7;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const pop=(t,a,d=.45)=>back(lin(t,a,a+d));
+const fade=(t,a,d=.35)=>eo(lin(t,a,a+d));
+const set=(el,o,tr)=>{el.style.opacity=o;if(tr!==undefined)el.style.transform=tr};
+const W=window.WORDS;
+const wt=(txt,from=0)=>{for(let i=0;i<W.length;i++){if(W[i][1]>=from-0.01 && W[i][0].toLowerCase().replace(/[^a-z0-9'’-]/g,'').startsWith(txt))return W[i][1]}return from};
+
+/* ---------- logo ---------- */
+function logoSVG(rot){
+ return `<defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e4ff6a"/><stop offset="1" stop-color="#9fd400"/></linearGradient></defs>
+ <circle cx="23" cy="23" r="22" fill="url(#lg)"/>
+ <g transform="rotate(${rot} 23 23)"><ellipse cx="23" cy="23" rx="18" ry="7" fill="none" stroke="#0b0d13" stroke-width="1.6" opacity=".55"/>
+ <circle cx="41" cy="23" r="2.6" fill="#0b0d13"/></g>
+ <text x="23" y="30.5" text-anchor="middle" font-family="Unb" font-weight="900" font-size="21" fill="#0b0d13">N</text>`;
+}
+
+/* ---------- static decorations ---------- */
+(function(){
+ let s='';for(let x=60;x<720;x+=180)for(let y=120;y<1280;y+=180)s+=`<path d="M${x-5} ${y}h10M${x} ${y-5}v10" stroke="rgba(255,255,255,.18)" stroke-width="1"/>`;
+ $('crosses').innerHTML=s;
+ $('prog').innerHTML='<i><b></b></i>'.repeat(12);
+})();
+
+/* ---------- car (side x-ray) ---------- */
+function carSVG(id,opts={}){
+ const seats=[[200,'s1'],[330,'s2'],[455,'s3']].map(([x,k])=>`
+  <g class="${id}-seat" data-k="${k}">
+   <rect x="${x-34}" y="196" width="70" height="26" rx="8"/>
+   <rect x="${x+16}" y="120" width="24" height="88" rx="9" transform="rotate(10 ${x+28} 200)"/>
+   <rect x="${x+26}" y="104" width="22" height="18" rx="6"/>
+  </g>`).join('');
+ return `<svg viewBox="0 0 680 340" width="680" height="340" style="overflow:visible">
+ <defs>
+  <linearGradient id="${id}glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fb4ff" stop-opacity=".16"/><stop offset="1" stop-color="#9fb4ff" stop-opacity=".04"/></linearGradient>
+  <linearGradient id="${id}bat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#c77a12"/></linearGradient>
+  <filter id="${id}glow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+ </defs>
+ <ellipse cx="340" cy="312" rx="300" ry="16" fill="#000" opacity=".5"/>
+ <path d="M40 250 L44 170 Q48 140 80 132 L170 60 Q186 48 210 48 L560 48 Q590 48 604 70 L640 140 Q652 160 650 190 L648 250 Q646 268 628 268 L52 268 Q40 268 40 250Z" fill="url(#${id}glass)" stroke="rgba(190,205,255,.45)" stroke-width="2"/>
+ <path d="M178 66 L118 132 L300 132 L300 62Z M316 62 L316 132 L470 132 L470 62Z M486 62 L486 132 L612 132 L586 72 Q578 62 564 62Z" fill="rgba(190,205,255,.06)" stroke="rgba(190,205,255,.25)" stroke-width="1.5"/>
+ <path d="M620 150 L652 160" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+ <path d="M40 160 L62 156" stroke="#ff4d4f" stroke-width="5" stroke-linecap="round"/>
+ <g id="${id}batg">
+  <rect x="120" y="226" width="440" height="30" rx="6" fill="url(#${id}bat)" filter="url(#${id}glow)" opacity=".7"/>
+  <rect x="120" y="226" width="440" height="30" rx="6" fill="url(#${id}bat)"/>
+  ${Array.from({length:10},(_,i)=>`<line x1="${120+44*i+44}" y1="228" x2="${120+44*i+44}" y2="254" stroke="#7a4708" stroke-width="2" opacity=".6"/>`).join('')}
+ </g>
+ <g id="${id}seats" fill="#5d6f9e" stroke="#9fb4ff" stroke-width="1.2">${seats}</g>
+ <g id="${id}mot" opacity="0">
+  <circle cx="120" cy="262" r="20" fill="#2b3346" stroke="#ffb23e" stroke-width="3"/>
+  <circle cx="570" cy="262" r="20" fill="#2b3346" stroke="#ffb23e" stroke-width="3"/>
+ </g>
+ <path id="${id}cab" d="M140 262 L190 246 L540 246 L560 262" fill="none" stroke="#ff4d4f" stroke-width="5" stroke-linecap="round" opacity="0"/>
+ <path id="${id}cabf" d="M140 262 L190 246 L540 246 L560 262" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 40" opacity="0"/>
+ <g id="${id}field" fill="none" stroke="#7aa2ff" stroke-width="1.5" opacity="0"></g>
+ ${[120,570].map(x=>`<g transform="translate(${x} 270)"><circle r="44" fill="#14161d" stroke="#3a4152" stroke-width="3"/><circle r="30" fill="#1e222c" stroke="#555e72" stroke-width="2"/><g class="${id}spk">${[0,60,120].map(a=>`<line x1="-26" y1="0" x2="26" y2="0" stroke="#677088" stroke-width="3" transform="rotate(${a})"/>`).join('')}</g><circle r="6" fill="#8891a6"/></g>`).join('')}
+ </svg>`;
+}
+function fieldLines(id,amt,phase){
+ const g=$(id+'field');let s='';
+ for(let i=0;i<4;i++){const r=30+i*26+((phase*30)%26);const o=(1-i/4)*amt;
+  s+=`<ellipse cx="340" cy="241" rx="${230+r}" ry="${18+r*.55}" opacity="${o}" stroke-dasharray="6 8"/>`;}
+ g.innerHTML=s;g.setAttribute('opacity',1);
+}
+['s1car','s3car','s4car','s10car'].forEach(id=>$(id).innerHTML=carSVG(id));
+
+/* ---------- phone ---------- */
+function phoneHTML(title,sub){
+ return `<div style="position:absolute;inset:0;border-radius:52px;background:#0d0f15;border:2px solid #3a3f4d;box-shadow:0 0 0 8px #1a1d25,0 40px 90px rgba(0,0,0,.7);overflow:hidden">
+  <div style="position:absolute;left:50%;top:14px;width:110px;height:30px;margin-left:-55px;border-radius:20px;background:#000"></div>
+  <div class="mono" style="position:absolute;left:34px;top:20px;font-size:13px;color:#ddd">21:14</div>
+  <div style="position:absolute;left:0;right:0;top:60px;height:66px;border-bottom:1px solid rgba(255,255,255,.07);background:#141720">
+   <div style="position:absolute;left:22px;top:12px;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ffb23e,#ff6a3d)"></div>
+   <div style="position:absolute;left:74px;top:13px;font:800 16px Man">${title}</div>
+   <div style="position:absolute;left:74px;top:35px;font:500 12px Man;color:rgba(255,255,255,.45)">${sub}</div>
+  </div>
+  <div class="msgs" style="position:absolute;left:14px;right:14px;top:140px;bottom:70px"></div>
+  <div style="position:absolute;left:14px;right:14px;bottom:16px;height:42px;border-radius:21px;background:#1b1e27;font:500 14px Man;color:rgba(255,255,255,.3);padding:12px 18px">Xabar...</div>
+ </div>`;
+}
+$('phone2').innerHTML=phoneHTML('Mashinachilar 🚗','8 ishtirokchi');
+$('phone12').innerHTML=phoneHTML('Do\'stim','onlayn');
+const bubble=(html,me,extra='')=>`<div style="max-width:78%;${me?'margin-left:auto;background:#2f6bff;border-bottom-right-radius:6px':'background:#232736;border-bottom-left-radius:6px'};border-radius:18px;padding:10px 14px;font:600 14.5px/1.35 Man;margin-top:10px;${extra}">${html}</div>`;
+$('phone2').querySelector('.msgs').innerHTML=
+ `<div class="m" style="position:absolute;left:0;right:0;bottom:0">
+  ${bubble(`<div style="height:120px;border-radius:12px;margin:-4px -8px 8px;background:linear-gradient(180deg,#ffcf8a,#ff8f5a);position:relative;overflow:hidden"><div style="position:absolute;left:28px;right:28px;bottom:26px;height:46px;border-radius:14px 30px 8px 8px;background:#f2f4f8"></div><div style="position:absolute;left:56px;bottom:14px;width:26px;height:26px;border-radius:50%;background:#222"></div><div style="position:absolute;right:56px;bottom:14px;width:26px;height:26px;border-radius:50%;background:#222"></div></div>Li L9 oldim! 🔥`,true,'opacity:0')}
+  ${bubble(`<b style="color:#ffb23e">Jasur</b><br>Uka, sot.`,false,'opacity:0')}
+  ${bubble(`Ostingdagi batareya seni nurlantiradi ☢️`,false,'opacity:0')}
+  ${bubble(`<span style="color:#ff6b6b">⚠ Farzand bo'lmaydi</span>`,false,'opacity:0')}
+  ${bubble(`😂😂 ...`,true,'opacity:0')}
+ </div>
+ <div class="g" style="position:absolute;left:0;right:0;top:0;bottom:0;background:#0d0f15;opacity:0;padding:10px">
+  <div style="height:44px;border-radius:22px;background:#1b1e27;padding:12px 18px;font:600 14px Man;color:#ddd">🔍 <span class="q"></span></div>
+  <div class="r" style="opacity:0">${[1,2,3].map(i=>`<div style="margin-top:22px"><div style="font:700 13px Man;color:#8ab4ff">elektromobil · nurlanish · salomatlik</div><div style="height:9px;border-radius:5px;background:#252a37;margin-top:9px;width:${96-i*9}%"></div><div style="height:9px;border-radius:5px;background:#252a37;margin-top:7px;width:${70+i*6}%"></div></div>`).join('')}</div>
+ </div>`;
+$('phone12').querySelector('.msgs').innerHTML=`<div style="position:absolute;left:0;right:0;bottom:0">
+  ${bubble(`Li L9 ni sotish shart emas 😉<br>Mana dalillar 👇`,true,'opacity:0')}
+  ${bubble(`<div style="height:90px;border-radius:12px;margin:-4px -8px 8px;background:#0b0d13;position:relative;overflow:hidden"><svg viewBox="0 0 46 46" width="56" height="56" style="position:absolute;left:50%;top:50%;margin:-28px 0 0 -28px" class="logoMini"></svg></div>NITRON · Elektromobil va salomatlik`,true,'opacity:0')}
+  ${bubble(`Uf... tinchlandim 😮‍💨`,false,'opacity:0')}
+ </div>`;
+
+/* ---------- cells ---------- */
+function cells(id){let s='';for(let i=0;i<100;i++)s+=`<div class="cell" style="left:${(i%10)*26}px;top:${Math.floor(i/10)*26}px"></div>`;$(id).innerHTML=s;return [...$(id).children]}
+const C4=cells('s4cells'),C5=cells('s5cells');
+const rnd=(i)=>{const x=Math.sin(i*127.1+11.7)*43758.5453;return x-Math.floor(x)};
+const order=[...Array(100).keys()].sort((a,b)=>rnd(a)-rnd(b));
+
+/* ---------- S6 cars grid & seat ---------- */
+(function(){
+ let s='';for(let i=0;i<14;i++){const c=i%4,r=Math.floor(i/4);const x=(r==3?80:0)+c*160,y=r*96;
+  s+=`<svg class="mini" viewBox="0 0 140 70" width="140" height="70" style="position:absolute;left:${x}px;top:${y}px;opacity:0"><path d="M8 50 L10 34 L34 30 L50 16 L104 16 L126 32 L132 50Z" fill="rgba(160,180,255,.06)" stroke="rgba(190,205,255,.55)" stroke-width="2"/><circle cx="36" cy="52" r="9" fill="#0b0d13" stroke="#8891a6" stroke-width="2"/><circle cx="106" cy="52" r="9" fill="#0b0d13" stroke="#8891a6" stroke-width="2"/><circle class="dot" cx="70" cy="40" r="4" fill="#3dff8f" opacity="0"/><text x="70" y="68" text-anchor="middle" font-family="Mono" font-size="8" fill="rgba(255,255,255,.4)">${i<9?'elektro':i<12?'gibrid':'benzin'}</text></svg>`;}
+ $('s6cars').innerHTML=s;
+ $('s6seat').innerHTML=`<div class="lbl" style="position:absolute;left:26px;top:22px">maydon eng kuchli joy</div>
+ <svg viewBox="0 0 640 480" width="640" height="480" style="position:absolute;left:0;top:0">
+  <g fill="none" stroke="rgba(220,228,255,.8)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+   <circle cx="150" cy="120" r="34"/>
+   <path d="M150 156 L170 270 L300 280 L330 400 L380 400"/>
+   <path d="M160 190 L250 230 L330 200"/>
+   <path d="M110 140 L120 300 L300 310"/>
+   <path d="M330 180 L360 210"/>
+  </g>
+  <g id="legs" transform="translate(330 400)"><rect x="-40" y="-26" width="100" height="44" rx="6" fill="rgba(255,178,62,.25)" stroke="#ffb23e" stroke-width="2"/><circle r="40" fill="#ffb23e" opacity=".25" filter="url(#bl6)"/></g>
+  <defs><filter id="bl6"><feGaussianBlur stdDeviation="12"/></filter></defs>
+  ${['bosh','tana','oyoq'].map((k,i)=>`<text x="440" y="${130+i*70}" font-family="Man" font-weight="700" font-size="16" fill="#fff">${k}</text><rect x="440" y="${142+i*70}" width="160" height="8" rx="4" fill="rgba(255,255,255,.08)"/><rect class="bar" data-v="${[.12,.25,.85][i]}" x="440" y="${142+i*70}" width="0" height="8" rx="4" fill="${i==2?'#ffb23e':'#7f8db0'}"/>`).join('')}
+  <text x="440" y="370" font-family="Mono" font-size="12" fill="rgba(255,255,255,.45)">benzinli ≈ elektro</text>
+ </svg>`;
+})();
+
+/* ---------- S8 thermal figure ---------- */
+$('s8cam').innerHTML=`
+ <div class="lbl" style="position:absolute;left:24px;top:20px;color:#ffd0a0"><span style="color:#ff4d4f">●</span> IR · issiqlik kamerasi</div>
+ <div id="s8tag" class="mono" style="position:absolute;left:24px;top:48px;font-size:12px;color:rgba(255,255,255,.55)"></div>
+ <div id="s8clock" style="position:absolute;left:24px;top:76px;display:flex;align-items:center;gap:12px;opacity:0">
+  <div id="s8ico" style="width:44px;height:44px;border-radius:50%;border:2px solid #ffd27a;display:flex;align-items:center;justify-content:center;font-size:22px"></div>
+  <div id="s8time" style="font:900 34px Unb;color:#fff"></div></div>
+ <div style="position:absolute;right:26px;top:70px;width:10px;height:470px;border-radius:5px;background:linear-gradient(#fff6c8,#ffb23e,#ff4d4f,#9b2bd6,#2b145e)"></div>
+ <div class="mono" style="position:absolute;right:42px;top:66px;font-size:11px;color:#fff">42°</div>
+ <div class="mono" style="position:absolute;right:42px;top:530px;font-size:11px;color:#fff">24°</div>
+ <svg viewBox="0 0 640 640" width="640" height="640" style="position:absolute;left:0;top:0">
+  <defs>
+   <radialGradient id="hot" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff2b0"/><stop offset=".45" stop-color="#ffb23e"/><stop offset="1" stop-color="#ff6a3d" stop-opacity="0"/></radialGradient>
+   <filter id="tb"><feGaussianBlur stdDeviation="7"/></filter>
+  </defs>
+  <g id="seatHeat" opacity="0"><ellipse cx="270" cy="420" rx="150" ry="40" fill="#ff4d4f" filter="url(#tb)" opacity=".8"/><path d="M180 140 Q170 300 200 420" stroke="#ff4d4f" stroke-width="40" fill="none" filter="url(#tb)" opacity=".7"/></g>
+  <g filter="url(#tb)" fill="#ff9a2e">
+   <circle cx="230" cy="170" r="46"/>
+   <path d="M190 220 Q230 205 270 225 L300 400 L200 410 Z"/>
+   <path d="M260 250 Q330 280 400 260 L410 285 Q330 310 260 290Z"/>
+   <path d="M210 380 L360 390 L380 520 L340 525 L330 430 L220 425Z"/>
+  </g>
+  <g fill="#ffd27a" opacity=".85"><circle cx="230" cy="170" r="28"/><path d="M205 240 L262 245 L282 380 L215 388Z"/></g>
+  <circle id="hotspot" cx="300" cy="400" r="60" fill="url(#hot)"/>
+  <path d="M420 230 L470 330" stroke="#6b4bd6" stroke-width="10" stroke-linecap="round"/>
+  <path d="M120 540 L500 540" stroke="#4b2c8a" stroke-width="6"/>
+  <g transform="translate(300 400)"><rect x="-18" y="-18" width="36" height="36" fill="none" stroke="#fff" stroke-width="1.5"/></g>
+ </svg>
+ <div id="s8temp" class="mono" style="position:absolute;left:330px;top:350px;padding:4px 10px;background:rgba(0,0,0,.6);border:1px solid #fff;font-size:18px;font-weight:700;color:#fff"></div>
+ <div id="s8delta" style="position:absolute;left:330px;top:300px;font:900 26px Unb;color:#ff4d4f;opacity:0;text-shadow:0 0 16px rgba(255,77,79,.7)"></div>`;
+
+/* ---------- S11 rules ---------- */
+const RULES=[['🔥','Isindingmi?','isitgichni O\'CHIR'],['❄️','Ventilyatsiyani','YOQ'],['🚶','Har 1,5–2 soatda','chiqib, badanni yoz']];
+$('s11list').innerHTML=RULES.map((r,i)=>`<div class="card rule" style="position:relative;height:150px;margin-bottom:26px;opacity:0">
+ <div style="position:absolute;left:26px;top:36px;font:900 64px Unb;color:var(--org);line-height:1">${i+1}</div>
+ <div style="position:absolute;left:100px;top:34px;width:70px;height:70px;border-radius:18px;background:rgba(255,255,255,.06);font-size:36px;display:flex;align-items:center;justify-content:center">${r[0]}</div>
+ <div style="position:absolute;left:192px;top:38px;font:800 24px Man">${r[1]}</div>
+ <div style="position:absolute;left:192px;top:76px;font:800 20px Man;color:${i==0?'#ff6a6a':'#7fe0a8'}">${r[2]}</div>
+ <div class="ok" style="position:absolute;right:24px;top:52px;width:44px;height:44px;border-radius:50%;background:#3dff8f;color:#0b0d13;font:900 24px Man;display:flex;align-items:center;justify-content:center;opacity:0">✓</div>
+</div>`).join('');
+
+/* ---------- scenes ---------- */
+const SC=[
+ {id:'s1',a:0,b:4.85,ch:'savol'},
+ {id:'s2',a:4.85,b:15.4,ch:'chat'},
+ {id:'s3',a:15.4,b:28.6,ch:'pol ostida'},
+ {id:'s4',a:28.6,b:39.13,ch:"o'lchov"},
+ {id:'s5',a:39.13,b:45.38,ch:'taqqoslash'},
+ {id:'s6',a:45.38,b:59.7,ch:'Germaniya'},
+ {id:'s7',a:59.7,b:65.78,ch:'burilish'},
+ {id:'s8',a:65.78,b:82.93,ch:'teplovizor'},
+ {id:'s9',a:82.93,b:88.64,ch:'ilm-fan'},
+ {id:'s10',a:88.64,b:95.86,ch:'har qanday mashina'},
+ {id:'s11',a:95.86,b:103.87,ch:'3 qoida'},
+ {id:'s12',a:103.87,b:113.5,ch:'xulosa'},
+];
+const END=113.5;
+
+/* ---------- captions ---------- */
+const BOX=new Set(['batareya','guglladi','motorlar','yuzlab','amper','magnit','mikroteslada','yuz','xitoyliklar','bir!','adyol','ellikkacha','fen','to\'rtta','me\'yorda','oyoq','nurlanish','kamerasini','sovuqroq','konditsioneri','uch','ikki','isitgichini','har','ventilyatsiya','uchta','qoidasi','isitgichni','o\'chir','ventilyatsiyani','badaningni','tinchlansin','maksimumga','datchiklar','haqiqatmi']);
+const RED=new Set(['nurlantiradi','farzand','bo\'lmaydi','dushman','issiqroq','qirq','sauna','afsona?']);
+const norm=s=>s.toLowerCase().replace(/[.,:;"«»…]/g,'').replace(/\.\.\.$/,'');
+const CH=[];{let cur=[];const flush=()=>{if(cur.length){CH.push(cur);cur=[]}};
+ W.forEach((w,i)=>{cur.push(i);const len=cur.map(j=>W[j][0]).join(' ').length;const p=/[.,:?!…]$/.test(w[0]);const nxt=W[i+1];
+  const gap=nxt?nxt[1]-w[2]:1;
+  if((p&&cur.length>=2)||len>19||/[.?!]$/.test(w[0])||gap>.35)flush();});flush();}
+function caption(t){
+ let k=-1;for(let i=0;i<CH.length;i++){if(W[CH[i][0]][1]<=t+0.05)k=i;}
+ const cap=$('cap');
+ if(k<0||t>END-3.2){cap.innerHTML='';return}
+ const ch=CH[k];const last=W[ch[ch.length-1]];
+ const nxt=CH[k+1];
+ if(t>last[2]+0.7&&(!nxt||W[nxt[0]][1]>t+0.3)){cap.innerHTML='';return}
+ const st=W[ch[0]][1];const p=eo(lin(t,st-.05,st+.2));
+ cap.style.opacity=p;cap.style.transform=`translateY(${(1-p)*10}px)`;
+ cap.innerHTML=ch.map(j=>{const w=W[j];const n=norm(w[0]);const on=t>=w[1]-0.03;
+  const cls=['w'];if(on)cls.push('on');if(BOX.has(n)||BOX.has(w[0].toLowerCase()))cls.push('box');if(RED.has(n)||RED.has(w[0].toLowerCase()))cls.push('red');
+  return `<span class="${cls.join(' ')}">${w[0].replace(/"/g,'')}</span>`}).join('');
+}
+
+/* ---------- main render ---------- */
+function render(t){
+ // logo
+ const lr=(t*40)%360;
+ $('logo').innerHTML=logoSVG(lr);
+ document.querySelectorAll('.logoMini,.logoBig').forEach(e=>e.innerHTML=logoSVG(lr));
+ // bg drift
+ $('grid').style.backgroundPosition=`0 ${(t*6)%60}px`;
+ $('b1').style.opacity=.10+.05*Math.sin(t*.7);$('b2').style.opacity=.10+.05*Math.cos(t*.5);
+ // scene index
+ let si=0;SC.forEach((s,i)=>{if(t>=s.a)si=i});
+ $('scn').textContent=`sahna ${String(si+1).padStart(2,'0')}/12`;
+ $('chap').textContent=SC[si].ch;
+ [...$('prog').children].forEach((el,i)=>{const s=SC[i];el.firstChild.style.width=(i<si?100:i==si?lin(t,s.a,s.b)*100:0)+'%'});
+ // scenes visibility with crossfade
+ SC.forEach(s=>{const el=$(s.id);const o=Math.min(eo(lin(t,s.a-.15,s.a+.3)),1-eo(lin(t,s.b-.2,s.b+.15)));
+  el.style.opacity=(s.id=='s12')?eo(lin(t,s.a-.15,s.a+.3)):o;el.style.display=o>0||s.id=='s12'&&t>=s.a-.2?'block':'none';
+  el.style.transform=`translateY(${(1-eo(lin(t,s.a-.15,s.a+.4)))*30}px)`;});
+ caption(t);
+ const spk=(id,sp)=>document.querySelectorAll('.'+id+'spk').forEach(e=>e.setAttribute('transform',`rotate(${t*sp})`));
+
+ /* S1 */
+ if(t<5.2){
+  set($('s1t'),fade(t,.05,.5),`scale(${.9+.1*pop(t,.05,.6)})`);
+  spk('s1car',60);
+  const g=$('s1carbatg');g.setAttribute('opacity',.6+.4*Math.sin(t*6));
+  set($('s1car'),fade(t,.3,.6),`translateX(${(1-eo(lin(t,.3,1.4)))*-200}px)`);
+  fieldLines('s1car',.8*fade(t,1.2,.6),t);
+  set($('c1a'),fade(t,2.9,.3),`scale(${pop(t,2.9)})`);set($('c1b'),fade(t,3.85,.3),`scale(${pop(t,3.85)})`);
+ }
+ /* S2 */
+ if(t>4.5&&t<16){
+  set($('phone2'),1,`translateY(${(1-eo(lin(t,4.85,5.6)))*120}px) rotate(${(1-eo(lin(t,4.85,5.6)))*-6}deg)`);
+  const bs=$('phone2').querySelectorAll('.m>div');
+  const tt=[5.2,8.5,9.3,11.15,12.9];
+  bs.forEach((b,i)=>set(b,fade(t,tt[i],.25),`translateY(${(1-eo(lin(t,tt[i],tt[i]+.3)))*20}px) scale(${.92+.08*pop(t,tt[i])})`));
+  const g=$('phone2').querySelector('.g');const go=fade(t,13.75,.3);g.style.opacity=go;
+  const q='elektromobil nurlanish zarar';g.querySelector('.q').textContent=q.slice(0,Math.floor(lin(t,13.9,14.9)*q.length));
+  g.querySelector('.r').style.opacity=fade(t,14.95,.3);
+ }
+ /* S3 */
+ if(t>15&&t<29){
+  spk('s3car',t>21.8&&t<24?400:30);
+  set($('s3car'),1,`scale(${1+.04*eo(lin(t,15.4,28))})`);
+  $('s3carbatg').setAttribute('opacity',.3+.7*fade(t,16.7,.4));
+  document.querySelectorAll('.s3car-seat').forEach(e=>e.setAttribute('opacity',.55));
+  $('s3carmot').setAttribute('opacity',fade(t,19.5,.3));
+  $('s3carcab').setAttribute('opacity',fade(t,20.1,.4));
+  $('s3carcabf').setAttribute('opacity',t>21.8?fade(t,21.8,.2):0);
+  $('s3carcabf').setAttribute('stroke-dashoffset',-t*300);
+  fieldLines('s3car',fade(t,24.4,.6),t);
+  set($('s3lab'),fade(t,15.6,.3));
+  $('s3amp').innerHTML=`<span style="font:900 46px Unb;color:#ff6a3d;text-shadow:0 0 22px rgba(255,106,61,.6)">${Math.round(eo(lin(t,22.6,23.6))*400)} A</span>`;
+  set($('s3amp'),fade(t,22.6,.2)*(1-fade(t,25.4,.3)));
+  set($('s3stamp'),fade(t,26.9,.15),`rotate(-3deg) scale(${1.6-.6*eo(lin(t,26.9,27.25))})`);
+ }
+ /* S4 */
+ if(t>28.3&&t<39.5){
+  spk('s4car',20);
+  fieldLines('s4car',.6,t);
+  set($('s4car'),1,`scale(${.95}) translateY(${-eo(lin(t,32,32.6))*10}px)`);
+  set($('s4unit'),fade(t,30.4,.3)*(1-fade(t,32.0,.3)),`scale(${pop(t,30.4)})`);
+  set($('s4card'),fade(t,32.1,.35),`translateY(${(1-eo(lin(t,32.1,32.6)))*40}px)`);
+  const lit=Math.round(eo(lin(t,32.4,33.4))*100);
+  C4.forEach((c,i)=>{c.style.background=i<lit?'rgba(120,150,230,.35)':'rgba(255,255,255,.07)';c.style.boxShadow='none'});
+  const one=t>35.4; if(one){C4.forEach(c=>c.style.background='rgba(255,255,255,.07)');C4[0].style.background='#ffb23e';C4[0].style.boxShadow='0 0 14px #ffb23e';}
+  const rear=t>37.4;
+  $('s4right').innerHTML=!one?`<div class="lbl">xavfsiz me'yor</div><div style="font:900 96px Unb;color:#9fc1ff;margin-top:18px">100</div><div class="lbl" style="margin-top:6px">µT</div>`:
+   !rear?`<div class="lbl">Xitoy · old o'rindiq</div><div style="font:900 120px Unb;color:#ffb23e;text-shadow:0 0 30px rgba(255,178,62,.7);margin-top:10px">1%</div><div class="lbl" style="margin-top:6px">≈ 1 µT</div>`:
+   `<div class="lbl">orqa o'rindiq</div><div style="font:900 96px Unb;color:#3dff8f;text-shadow:0 0 30px rgba(61,255,143,.5);margin-top:18px">&lt;0,5</div><div class="lbl" style="margin-top:6px">µT</div>`;
+  const rs=one?(rear?pop(t,37.4):pop(t,35.4)):pop(t,32.9);$('s4right').style.transform=`scale(${rs})`;
+ }
+ /* S5 */
+ if(t>38.8&&t<45.8){
+  set($('s5t'),fade(t,39.2,.3),`scale(${pop(t,39.2)})`);
+  const blanket=t<43.2;
+  const n=blanket?Math.round(eo(lin(t,41.3,42.6))*50):Math.round(eo(lin(t,43.3,44.6))*100);
+  C5.forEach((c,i)=>{const on=order.indexOf(i)<n;c.style.background=on?(blanket?'#ffb23e':'#ff4d4f'):'rgba(255,255,255,.07)';c.style.boxShadow=on&&!blanket?'0 0 10px rgba(255,77,79,.8)':'none'});
+  $('s5right').innerHTML=blanket?
+   `<div style="text-align:center;margin-top:20px;font-size:84px">🛏️</div><div style="text-align:center;font:800 20px Man;margin-top:4px">elektr adyol</div><div style="text-align:center;font:900 64px Unb;color:#ffb23e;margin-top:10px">${Math.round(eo(lin(t,41.3,42.6))*50)}</div><div class="lbl" style="text-align:center">µT gacha</div>`:
+   `<div style="text-align:center;margin-top:20px;font-size:84px">💨</div><div style="text-align:center;font:800 20px Man;margin-top:4px">fen · bosh yonida</div><div style="text-align:center;font:900 52px Unb;color:#ff4d4f;margin-top:16px;text-shadow:0 0 20px rgba(255,77,79,.7)">YUZLAB</div><div class="lbl" style="text-align:center;margin-top:6px">µT</div>`;
+  $('s5right').style.opacity=blanket?fade(t,40.0,.3):fade(t,43.25,.25);
+  const bars=[['Elektromobil (old)',1,'#3dff8f'],['Elektr adyol',50,'#ffb23e'],['Fen',300,'#ff4d4f']];
+  $('s5cmp').innerHTML=bars.map((b,i)=>{const sh=t>[39.6,42.2,44.4][i];const w=sh?eo(lin(t,[39.6,42.2,44.4][i],[39.6,42.2,44.4][i]+.6))*Math.min(1,b[1]/300)*100:0;
+   return `<div style="margin-bottom:24px;opacity:${sh?1:.25}"><div style="display:flex;justify-content:space-between;font:700 16px Man"><span>${b[0]}</span><span class="mono" style="color:${b[2]}">${b[1]==300?'100+':'~'+b[1]} µT</span></div><div style="height:14px;border-radius:7px;background:rgba(255,255,255,.06);margin-top:8px"><div style="height:14px;border-radius:7px;width:${Math.max(w,sh?1.2:0)}%;background:${b[2]};box-shadow:0 0 14px ${b[2]}"></div></div></div>`}).join('');
+ }
+ /* S6 */
+ if(t>45&&t<60){
+  const minis=$('s6cars').querySelectorAll('.mini');
+  minis.forEach((m,i)=>{const a=47.1+i*.09;set(m,fade(t,a,.25)*(1-fade(t,54.5,.3)),`scale(${pop(t,a)})`);m.querySelector('.dot').setAttribute('opacity',t>51.1+i*.05?(.6+.4*Math.sin(t*8+i)):0)});
+  set($('s6lbl'),fade(t,45.5,.3)*(1-fade(t,54.5,.3)));
+  $('s6ok').innerHTML=`<span class="chip" style="font-size:26px;padding:14px 30px;background:rgba(61,255,143,.14);color:#3dff8f;border:2px solid rgba(61,255,143,.6)">✓ Hammasi me'yorda</span>`;
+  set($('s6ok'),fade(t,52.8,.3)*(1-fade(t,54.5,.3)),`scale(${pop(t,52.8)})`);
+  set($('s6seat'),fade(t,54.6,.35),`translateY(${(1-eo(lin(t,54.6,55.1)))*40}px)`);
+  $('s6seat').querySelectorAll('.bar').forEach((b,i)=>b.setAttribute('width',160*b.dataset.v*eo(lin(t,55.0+i*.2,55.8+i*.2))));
+  const lg=$('legs');lg.setAttribute('opacity',fade(t,55.4,.3)*(.7+.3*Math.sin(t*6)));
+ }
+ /* S7 */
+ if(t>59.4&&t<66.1){
+  set($('s7q'),fade(t,59.75,.3)*(1-fade(t,62.4,.3)),`scale(${pop(t,59.75)})`);
+  set($('s7myth'),fade(t,60.9,.3),`rotate(-2deg) translateY(${(1-eo(lin(t,60.9,61.3)))*30}px)`);
+  set($('s7stamp'),fade(t,61.85,.12),`rotate(-12deg) scale(${1.8-.8*eo(lin(t,61.85,62.15))})`);
+  $('s7enemy').innerHTML=`<div style="display:inline-flex;gap:60px;align-items:center">
+   <div style="width:130px;height:130px;border-radius:50%;border:4px solid #ff4d4f;display:flex;align-items:center;justify-content:center;font-size:70px;position:relative;opacity:${fade(t,64.2,.3)}">⚡<div style="position:absolute;left:-10px;right:-10px;top:60px;height:6px;background:#ff4d4f;transform:rotate(-40deg);opacity:${fade(t,64.9,.2)}"></div></div>
+   <div style="font-size:110px;opacity:${fade(t,64.95,.3)};filter:drop-shadow(0 0 20px rgba(255,100,60,.8))">🌡️</div></div>
+   <div style="font:900 40px Unb;color:#ff4d4f;margin-top:40px;text-transform:uppercase;text-shadow:0 0 24px rgba(255,77,79,.6);opacity:${fade(t,64.2,.3)}">Asl dushman?</div>`;
+ }
+ /* S8 */
+ if(t>65.4&&t<83.3){
+  set($('s8cam'),1,`scale(${.96+.04*eo(lin(t,65.8,66.6))})`);
+  let temp=34.0,tag='norma: tanadan 2–4° sovuqroq',ico='',time='',delta='';
+  if(t>=73.0&&t<78.1){temp=34.0+.9*eo(lin(t,75.8,77.4));tag='Fransiya · rul ortida';ico='⏱';
+   const m=Math.floor(eo(lin(t,74.2,75.6))*170);time=`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;delta=t>76.8?'+2°':''}
+  if(t>=78.1){temp=34.9+5.1*eo(lin(t,80.2,82.4));tag='Germaniya · o\'rindiq isitgichi';ico='💺';
+   const m=Math.floor(eo(lin(t,80.1,80.7))*90);time=`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;delta=t>81.8?'≈40°':''}
+  $('s8tag').textContent=tag;$('s8ico').textContent=ico;$('s8time').textContent=time;
+  $('s8clock').style.opacity=t>=73.0?fade(t,t>=78.1?78.1:73.0,.3):0;
+  $('s8temp').textContent=temp.toFixed(1)+' °C';
+  const d=$('s8delta');d.textContent=delta;d.style.opacity=delta?1:0;
+  const hs=$('hotspot');const k=lin(temp,34,40);hs.setAttribute('r',50+k*40);hs.setAttribute('opacity',.5+k*.5);
+  $('seatHeat').setAttribute('opacity',t>=78.1?fade(t,79.2,.8)*(.8+.2*Math.sin(t*5)):0);
+  $('s8note').innerHTML=t<73?`<div style="display:inline-flex;gap:14px;align-items:center;font:800 22px Man;opacity:${fade(t,69.8,.3)}"><span style="font-size:36px">❄️</span> tabiiy «konditsioner»: <span style="color:#7fc8ff">−2…4°</span></div>`:'';
+ }
+ /* S9 */
+ if(t>82.6&&t<89){
+  set($('s9card'),fade(t,82.95,.3),`translateY(${(1-eo(lin(t,82.95,83.4)))*30}px)`);
+  set($('s9chip'),fade(t,85.1,.2),`translateX(-50%) scale(${pop(t,85.1)})`);
+  $('s9sauna').innerHTML=`<div style="font-size:120px;filter:drop-shadow(0 0 30px rgba(255,90,60,.7))">🧖‍♂️</div><div style="font:900 44px Unb;color:#ff4d4f;text-transform:uppercase;margin-top:10px;text-shadow:0 0 24px rgba(255,77,79,.6)">sauna</div><div style="font:800 22px Man;color:rgba(255,255,255,.7);margin-top:10px">spermatozoidlar uchun — do'st emas</div>`;
+  set($('s9sauna'),fade(t,86.5,.3),`scale(${pop(t,86.5)})`);
+ }
+ /* S10 */
+ if(t>88.3&&t<96.2){
+  set($('s10t'),fade(t,88.7,.3),`scale(${pop(t,88.7)})`);
+  $('s10tags').innerHTML=`<span class="chip" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);opacity:${fade(t,91.1,.2)}">Camry</span> <span class="chip" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);margin-left:10px;opacity:${fade(t,91.9,.2)}">Jiguli</span> <span class="chip" style="background:rgba(255,178,62,.16);border:1px solid rgba(255,178,62,.5);color:#ffb23e;margin-left:10px;opacity:${fade(t,92.9,.2)}">Li L9</span>`;
+  spk('s10car',30);
+  const cool=fade(t,94.9,.5);
+  document.querySelectorAll('.s10car-seat').forEach(e=>{e.setAttribute('fill',cool>0?`rgb(${Math.round(255-170*cool)},${Math.round(150+60*cool)},${Math.round(80+175*cool)})`:'#ff9a5a')});
+  $('s10carbatg').setAttribute('opacity',.25);
+  $('s10vent').innerHTML=`<div style="font-size:64px;display:inline-block;transform:rotate(${t*90}deg)">❄️</div><div style="font:900 40px Unb;color:#7fc8ff;text-transform:uppercase;text-shadow:0 0 24px rgba(127,200,255,.6);margin-top:8px">ventilyatsiya</div>`;
+  set($('s10vent'),cool,`scale(${pop(t,94.9)})`);
+ }
+ /* S11 */
+ if(t>95.5&&t<104.2){
+  const ra=[97.9,99.45,100.7],rc=[99.1,100.3,103.4];
+  $('s11list').querySelectorAll('.rule').forEach((r,i)=>{set(r,fade(t,ra[i],.3),`translateX(${(1-eo(lin(t,ra[i],ra[i]+.4)))*-60}px)`);
+   r.querySelector('.ok').style.opacity=fade(t,rc[i],.2);r.querySelector('.ok').style.transform=`scale(${pop(t,rc[i])})`;});
+ }
+ /* S12 */
+ if(t>103.5){
+  const ph=$('phone12');
+  set(ph,(1-fade(t,108.2,.3)),`translateY(${(1-eo(lin(t,103.9,104.6)))*120}px)`);
+  const bs=ph.querySelectorAll('.msgs>div>div');const tt=[104.3,106.1,107.6];
+  bs.forEach((b,i)=>set(b,fade(t,tt[i],.25),`translateY(${(1-eo(lin(t,tt[i],tt[i]+.3)))*20}px)`));
+  set($('s12cta'),fade(t,108.35,.3)*(1-fade(t,110.9,.3)),`scale(${.9+.1*pop(t,108.35)})`);
+  set($('endcard'),fade(t,111.0,.4),`scale(${.85+.15*pop(t,111.0,.6)})`);
+ }
+}
+window.render=render;window.END=END;
+document.fonts.ready.then(()=>{window.READY=true});
+</script>
+</body>
+</html>
